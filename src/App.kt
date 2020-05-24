@@ -23,5 +23,16 @@ fun printSolve(fields: List<Int>) {
 
 fun main() {
 //    printSolve(listOf(1,2,3))
-    NimInteraction()
+//    NimInteraction()
+
+    val game = listOf(1,3,5,7)
+//
+//
+    var n = NimPerfect(game)
+    while(!n.isGameOver()) {
+        n = n.bestMove()
+    }
+
+    println(if(n.isWinPlayer1()) "Player 1 wins" else "Player 2 wins")
+    printSolve(game)
 }

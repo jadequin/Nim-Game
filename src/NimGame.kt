@@ -4,6 +4,10 @@ interface NimGame {
     fun undoMove(): NimGame
     fun bestMove(): NimGame
     fun isLegalMove(move: Move): Boolean
-    fun nextMoves(): List<NimGame>
-    fun negaMax(): Int
+    fun isGameOver(): Boolean
+    fun isPlayer1Turn(): Boolean
+    fun isWinPlayer1(): Boolean
+    fun isInitialState(): Boolean
+    fun initialState(): NimGame
+    fun result(): Int
 }
