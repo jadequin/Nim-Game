@@ -1,38 +1,33 @@
 
 
-fun solve(fields: List<Int>): Int {
+fun player1Wins(fields: List<Int>): Boolean {
     var G = 0
-    for(i in fields) {
-        if(i%2!=0)
-            G = G xor (i + 1)
-        else
-            G = G xor (i - 1)
-    }
-    return G
-}
+    for(i in fields)
+        G = G xor i
 
-fun printSolve(fields: List<Int>) {
-    if(solve(fields) == 0)
-        println("Player 2 wins")
-    else
-        println("Player 1 wins")
+    return G != 0
 }
 
 
 
 
 fun main() {
-//    printSolve(listOf(1,2,3))
-//    NimInteraction()
+    NimInteraction()
 
-    val game = listOf(1,3,5,7)
+//    val game = listOf(1,3,5,7,9)
+////
+////
+//    var n = Nim(game)
+//    var np = NimPerfect(game)
 //
+//    while(!n.isGameOver())
+//        n = n.bestMove()
 //
-    var n = NimPerfect(game)
-    while(!n.isGameOver()) {
-        n = n.bestMove()
-    }
-
-    println(if(n.isWinPlayer1()) "Player 1 wins" else "Player 2 wins")
-    printSolve(game)
+//    while(!np.isGameOver()) {
+//        np = np.bestMove()
+//    }
+//
+//    println("Winner Nim:\t\t\t" + if(n.isWinPlayer1()) "Player 1 wins" else "Player 2 wins")
+//    println("Winner NimPerfect:\t" + if(np.isWinPlayer1()) "Player 1 wins" else "Player 2 wins")
+//    println(if(player1Wins(game)) "Player 1 Winsss" else "Player 2 Winsss")
 }
