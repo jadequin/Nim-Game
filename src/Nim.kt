@@ -1,7 +1,6 @@
 import kotlin.math.*
 
 
-
 class Nim(
         private val fields: List<Int>,
         private val turn: Int = +1,
@@ -10,15 +9,16 @@ class Nim(
         private val maxShift: Int = ceil(log2((fields.max()?:0).toFloat())).toInt()): NimGame {
 
 
-    init {
-        if(maxShift * fields.size > Int.SIZE_BITS)
-            throw IllegalArgumentException("Please use smaller numbers or less rows (not more than ceil(ln(max. number in row)) * rows ")
+    companion object {
+        fun isValidBoardSize(fields: List<Int>) = ceil(log2((fields.max()?:0).toFloat())).toInt() * fields.size < Int.SIZE_BITS
+    }
 
+    init {
         this.minimax()
     }
 
-    override fun makeMove(move: Move): Nim = Nim(
-            fields = fields.take(move.row) + (if(fields[move.row] - move.number == 0) listOf<Int>() else listOf(fields[move.row] - move.number)) + fields.takeLast(fields.size - move.row - 1),
+    override fun makeMove(nimMove: NimMove) = Nim(
+            fields = fields.take(nimMove.row) + (if(fields[nimMove.row] - nimMove.number == 0) listOf() else listOf(fields[nimMove.row] - nimMove.number)) + fields.takeLast(fields.size - nimMove.row - 1),
             turn = -turn,
             history = history.plus(this),
             results = results,
@@ -29,17 +29,21 @@ class Nim(
 
     override fun bestMove() = nextMoves().firstOrNull { results[it] == turn } ?:nextMoves().random()
 
-    override fun isLegalMove(move: Move) = move.row >= 0 && move.row < fields.size && move.number >= 1 && move.number <= fields[move.row]
+    override fun isLegalMove(nimMove: NimMove) = nimMove.row >= 0 && nimMove.row < fields.size && nimMove.number >= 1 && nimMove.number <= fields[nimMove.row]
 
     override fun nextMoves(): List<Nim> {
         val result = mutableListOf<Nim>()
 
         for(i in fields.indices)
             for(j in 1..fields[i])
-                result.add(makeMove(Move(i, j)))
+                result.add(makeMove(NimMove(i, j)))
 
         return result.toList()
     }
+
+    override fun getField() = fields
+
+    override fun of(fields: List<Int>) = Nim(fields)
 
     override fun isPlayer1Turn() = turn == 1
 
