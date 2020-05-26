@@ -10,9 +10,7 @@ class Nim(
 
 
     companion object {
-        fun isValidBoardSize(fields: List<Int>): Boolean {
-            return ceil(log2((fields.max()?:0).toFloat())).toInt() * fields.size < Int.SIZE_BITS
-        }
+        fun isValidBoardSize(fields: List<Int>) = ceil(log2((fields.max()?:0).toFloat())).toInt() * fields.size < Int.SIZE_BITS
     }
 
     init {

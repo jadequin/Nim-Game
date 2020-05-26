@@ -6,6 +6,7 @@ import kotlin.NumberFormatException
 class NimInteraction {
 
     private var onExit = false
+    private var tailMessage = ""
 
     init {
         menu()
@@ -37,6 +38,10 @@ class NimInteraction {
                     "         [b]            back to main menu\n" +
                     "        [q/e]           quit"
             )
+            println()
+            println("-----------------------------")
+            println(tailMessage)
+            tailMessage = ""
 
             val input = readLine()?:"".toLowerCase()
 
@@ -59,19 +64,19 @@ class NimInteraction {
             }
             else {
                 val possibleRows = input.split("-")
+                val rows = mutableListOf<Int>()
 
                 try {
-                    val rows = mutableListOf<Int>()
                     possibleRows.forEach { rows.add(it.toInt()) }
-
-                    if(mode == "n" && !Nim.isValidBoardSize(rows))
-                        println("please try a valid board size -> ceil(ln(maxStickNumber)) * rows < 32")
-
-                    playGame(if(mode == "n") Nim(rows.toList()) else NimPerfect(rows.toList()))
                 }
                 catch(nfe: NumberFormatException) {
-                    println("not a valid input")
+                    tailMessage = "not a valid input"
                 }
+
+                if(mode == "n" && !Nim.isValidBoardSize(rows))
+                    tailMessage = "please try a valid board size -> ceil(ln(maxStickNumber)) * rows < 32"
+                else
+                    playGame(if(mode == "n") Nim(rows.toList()) else NimPerfect(rows.toList()))
             }
 
             println("\n".repeat(15))
@@ -83,8 +88,8 @@ class NimInteraction {
 
         while(!onExit) {
             println(
-                "++++++++++++++++++++" +
-                "   nim main menu" +
+                "++++++++++++++++++++\n" +
+                "   nim main menu\n" +
                 "++++++++++++++++++++" +
                 "\n" +
                 "\n" +
@@ -93,6 +98,10 @@ class NimInteraction {
                 "[n] = start game: nim\t\t" + "[np] = start game: nimPerfect\n" +
                 "[t] = launch test mode\t\t" + "[q/e] = quit"
             )
+            println()
+            println("-----------------------------")
+            println(tailMessage)
+            tailMessage = ""
 
             val input = readLine()?:"".toLowerCase()
 
@@ -105,7 +114,7 @@ class NimInteraction {
             else if(input.startsWith("q") || input.startsWith("e"))
                 break
             else
-                println("please try a valid keystroke!")
+                tailMessage = "please try a valid keystroke!"
 
             println("\n".repeat(15))
         }
@@ -137,6 +146,10 @@ class NimInteraction {
                     "             [r]       reset game\n" +
                     "     [b]       back to main menu\t" +
                     "    [q/e]      quit")
+            println()
+            println("-----------------------------")
+            println(tailMessage)
+            tailMessage = ""
 
             val input = readLine()?:"".toLowerCase()
 
@@ -148,7 +161,7 @@ class NimInteraction {
                 onExit = true
             else if(input.startsWith("u"))
                 if(n.isInitialState())
-                    println("can not undo the origin state")
+                    tailMessage = "can not undo the origin state"
                 else
                     n = n.undoMove()
             else if(input.startsWith("r"))
@@ -162,9 +175,9 @@ class NimInteraction {
                     if(n.isLegalMove(NimMove(row, number)))
                         n = n.makeMove(NimMove(row, number))
                     else
-                        println("try a valid move")
+                        tailMessage = "try a valid move"
                 } catch(e: Exception) {
-                    println("try again and enter a valid keystroke")
+                    tailMessage = "try again and enter a valid keystroke"
                 }
             }
             if(n.isGameOver())
@@ -175,15 +188,20 @@ class NimInteraction {
     }
 
     private fun testMode() {
+        println("\n".repeat(5)) //setup console display
+
         while(!onExit) {
             println(
-                "test mode" +
-                "---------" +
+                "test mode\n" +
                 "\n" +
                 "[ENTER]  nim vs nimPerfect: play 40 game simulations\n" +
                 "  [b]    back to main menu\n" +
                 " [q/e]   quit"
             )
+            println()
+            println("-----------------------------")
+            println(tailMessage)
+            tailMessage = ""
 
 
             val input = readLine()?:"".toLowerCase()
@@ -191,12 +209,11 @@ class NimInteraction {
                 onExit = true
             else if(input.isEmpty()) {
 
-                var player1: NimGame
-                var player2: NimGame
 
-                var resultPlayer1 = 0
 
-                var resultPlayer2 = 0
+                var resultNim = 0
+
+                var resultNimPerfect = 0
 
                 for(i in 1..40) {
 
@@ -206,12 +223,22 @@ class NimInteraction {
                     val nim = Nim(rndField)
                     val nimPerfect = NimPerfect(rndField)
 
+                    val player1isNim: Boolean
+
+                    var player1: NimGame
+                    var player2: NimGame
 
                     val player1Wins: Boolean = nimPerfect.isEstimatedWinnerPlayer1()
                     println("estimated winner: ${if(player1Wins) "player1" else "player2"}")
 
-                    if(Random.nextBoolean()) { player1 = nim; player2 = nimPerfect }
-                    else { player1 = nimPerfect; player2 = nim }
+                    if(Random.nextBoolean()) {
+                        player1 = nim; player2 = nimPerfect
+                        player1isNim = true
+                    }
+                    else {
+                        player1 = nimPerfect; player2 = nim
+                        player1isNim = false
+                    }
 
                     var player1Turn = true
                     while(!player1.isGameOver()) {
@@ -227,25 +254,26 @@ class NimInteraction {
                         player1Turn = !player1Turn
                     }
 
-                    if(player1.isWinPlayer1())
-                        resultPlayer1++
+                    if(player1.isWinPlayer1() && player1isNim || !player1.isWinPlayer1() && player1isNim)
+                        resultNim++
                     else
-                        resultPlayer2++
+                        resultNimPerfect++
 
-                    println("actual winner: ${if(player1.isWinPlayer1()) "player1" else "player2"}")
+                    println("actual winner: ${if(player1.isWinPlayer1()) "player1" else "player2"} (nim${if(player1isNim) "" else " perfect"})")
                     if(player1.isWinPlayer1() == player1Wins)
                         println("---correct---")
                     else {
-                        println("error - actual and estimated result are not the same")
+                        tailMessage = "error - actual and estimated result are not the same"
                         break
                     }
                 }
 
                 println()
                 println()
-                println("result: score player1 -> ${resultPlayer1}, score player2 -> ${resultPlayer2}")
+                tailMessage = "result: score nim -> ${resultNim}, score nimPerfect -> ${resultNimPerfect}"
             }
         }
+        println("\n".repeat(15))
     }
 }
 
