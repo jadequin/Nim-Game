@@ -1,6 +1,218 @@
+
+/*
+
+Till Nitsche
+5197769
+Informatik B. Sc.
+
+ */
+
+
+
+
+
+import kotlin.math.*
 import kotlin.io.readLine
 import kotlin.random.Random
 import kotlin.NumberFormatException
+
+
+
+
+
+
+interface NimGame {
+    fun makeMove(nimMove: NimMove): NimGame
+    fun undoMove(): NimGame
+    fun bestMove(): NimGame
+    fun isLegalMove(nimMove: NimMove): Boolean
+    fun isGameOver(): Boolean
+    fun isPlayer1Turn(): Boolean
+    fun isWinPlayer1(): Boolean
+    fun isInitialState(): Boolean
+    fun initialState(): NimGame
+    fun result(): Int
+    fun nextMoves(): List<NimGame>
+    fun of(fields: List<Int>): NimGame
+    fun getField(): List<Int>
+}
+
+
+
+
+
+
+
+
+data class NimMove(val row: Int, val number: Int)
+
+
+
+
+
+
+
+
+
+class NimPerfect(private val fields: List<Int>, private val turn: Int = +1, private val history: List<NimPerfect> = listOf()): NimGame {
+
+    override fun makeMove(nimMove: NimMove) = NimPerfect(
+            fields = fields.take(nimMove.row) + (if(fields[nimMove.row] - nimMove.number == 0) listOf() else listOf(fields[nimMove.row] - nimMove.number)) + fields.takeLast(fields.size - nimMove.row - 1),
+            turn = -turn,
+            history = history.plus(this)
+    )
+
+    override fun undoMove() = history.last()
+
+    override fun bestMove() = nextMoves().reduce { acc, nimPerfect -> if(nimPerfect.fields.fold(0) {ac, i -> ac xor i} == 0) nimPerfect else acc}
+
+    override fun nextMoves(): List<NimPerfect> {
+        val result = mutableListOf<NimPerfect>()
+
+        for(i in fields.indices)
+            for(j in 1..fields[i])
+                result.add(makeMove(NimMove(i, j)))
+
+        return result.toList()
+    }
+
+    override fun of(fields: List<Int>) = NimPerfect(fields)
+
+    override fun getField() = fields
+
+    fun isEstimatedWinnerPlayer1() = initialState().fields.fold(0) { acc, i -> acc xor i } != 0
+
+    override fun isLegalMove(nimMove: NimMove) = nimMove.row >= 0 && nimMove.row < fields.size && nimMove.number >= 1 && nimMove.number <= fields[nimMove.row]
+
+    override fun isGameOver() = fields.sum() == 0
+
+    override fun isPlayer1Turn() = turn == 1
+
+    override fun isWinPlayer1()  = result() == 1
+
+    override fun isInitialState() = history.isEmpty()
+
+    override fun initialState() = history.firstOrNull()?: this
+
+    override fun result() = if(isGameOver()) -turn else 0
+
+
+    override fun toString() = fields.joinToString(separator = "\n", transform = {("I ".repeat(it)).trimEnd()})
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Nim(
+        private val fields: List<Int>,
+        private val turn: Int = +1,
+        private val history: List<Nim> = listOf(),
+        private val results: HashMap<Nim, Int> = hashMapOf(),
+        private val maxShift: Int = ceil(log2((fields.max()?:0).toFloat())).toInt()): NimGame {
+
+
+    companion object {
+        fun isValidBoardSize(fields: List<Int>) = ceil(log2((fields.max()?:0).toFloat())).toInt() * fields.size < Int.SIZE_BITS
+    }
+
+    init {
+        this.minimax()
+    }
+
+    override fun makeMove(nimMove: NimMove) = Nim(
+            fields = fields.take(nimMove.row) + (if(fields[nimMove.row] - nimMove.number == 0) listOf() else listOf(fields[nimMove.row] - nimMove.number)) + fields.takeLast(fields.size - nimMove.row - 1),
+            turn = -turn,
+            history = history.plus(this),
+            results = results,
+            maxShift = maxShift
+    )
+
+    override fun undoMove() = history.last()
+
+    override fun bestMove() = nextMoves().firstOrNull { results[it] == turn } ?:nextMoves().random()
+
+    override fun isLegalMove(nimMove: NimMove) = nimMove.row >= 0 && nimMove.row < fields.size && nimMove.number >= 1 && nimMove.number <= fields[nimMove.row]
+
+    override fun nextMoves(): List<Nim> {
+        val result = mutableListOf<Nim>()
+
+        for(i in fields.indices)
+            for(j in 1..fields[i])
+                result.add(makeMove(NimMove(i, j)))
+
+        return result.toList()
+    }
+
+    override fun getField() = fields
+
+    override fun of(fields: List<Int>) = Nim(fields)
+
+    override fun isPlayer1Turn() = turn == 1
+
+    override fun isWinPlayer1() = result() == 1
+
+    override fun isInitialState() = history.isEmpty()
+
+    override fun initialState() = if(history.isEmpty()) this else history.elementAt(0)
+
+    override fun isGameOver() = fields.sum() == 0
+
+    override fun result() = if(isGameOver()) -turn else 0
+
+    private fun minimax(): Int {
+        if(results[this] != null)
+            return results[this]!!
+
+        if(isGameOver()) {
+            results[this] = result()
+            return result()
+        }
+
+        val bestScore = if(nextMoves().firstOrNull { it.minimax() == turn } != null) turn else -turn
+        results[this] = bestScore
+        return bestScore
+    }
+
+    override fun toString() = fields.joinToString(separator = "\n", transform = {("I ".repeat(it)).trimEnd()})
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        return other.hashCode() == this.hashCode()
+    }
+
+    override fun hashCode(): Int {
+        if(isGameOver())
+            return turn * Int.MAX_VALUE
+        return turn * fields.sorted().fold(0) {acc, i -> (acc shl maxShift) + i }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class NimInteraction {
@@ -67,12 +279,12 @@ class NimInteraction {
 
             println(
                     "\n" +
-                    "\n" +
-                    "       [ENTER]          Start a predefined game with the initial state 3-4-5\n" +
-                    "[number-number-number]  Start a game with your own settings\n" +
-                    "         [r]            Start a random game with 2-5 rows and 1-7 sticks per row\n" +
-                    "         [b]            back to main menu\n" +
-                    "        [q/e]           quit"
+                            "\n" +
+                            "       [ENTER]          Start a predefined game with the initial state 3-4-5\n" +
+                            "[number-number-number]  Start a game with your own settings\n" +
+                            "         [r]            Start a random game with 2-5 rows and 1-7 sticks per row\n" +
+                            "         [b]            back to main menu\n" +
+                            "        [q/e]           quit"
             )
             println()
             println("-----------------------------")
@@ -125,18 +337,9 @@ class NimInteraction {
         println("\n".repeat(5)) //setup console display
 
         while(!onExit) {
-            println(
-                    if(n.isGameOver())
-                        if(n.isPlayer1Turn())
-                            "p2 won the game"
-                        else
-                            "p1 won the game"
-                    else
-                        if(n.isPlayer1Turn())
-                            "p1 turn"
-                        else
-                            "p2 turn"
-            )
+            if(!n.isGameOver())
+                println((if (n.isPlayer1Turn()) "p1" else "p2") + " turn")
+
             println(n)
             println()
             println("   [ENTER]     ai makes a best move\t" +
@@ -191,11 +394,11 @@ class NimInteraction {
 
         while(!onExit) {
             println(
-                "test mode\n" +
-                "\n" +
-                "[ENTER]  nim vs nimPerfect: play 40 game simulations\n" +
-                "  [b]    back to main menu\n" +
-                " [q/e]   quit"
+                    "test mode\n" +
+                            "\n" +
+                            "[ENTER]  nim vs nimPerfect: play 40 game simulations\n" +
+                            "  [b]    back to main menu\n" +
+                            " [q/e]   quit"
             )
             println()
             println("-----------------------------")
@@ -276,6 +479,6 @@ class NimInteraction {
     }
 }
 
-fun main() {
-    NimInteraction()
-}
+
+
+NimInteraction()
