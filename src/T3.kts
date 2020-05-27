@@ -283,7 +283,7 @@ class NimInteraction {
                             "       [ENTER]          Start a predefined game with the initial state 3-4-5\n" +
                             "[number-number-number]  Start a game with your own settings\n" +
                             "         [r]            Start a random game with 2-5 rows and 1-7 sticks per row\n" +
-                            "         [b]            back to main menu\n" +
+                            "         [b]            back to previous menu\n" +
                             "        [q/e]           quit"
             )
             println()
@@ -346,7 +346,7 @@ class NimInteraction {
                     " [row.number]  make your own move\n" +
                     "     [u]       undo move\t" +
                     "             [r]       reset game\n" +
-                    "     [b]       back to main menu\t" +
+                    "     [b]       back to previous menu\t" +
                     "    [q/e]      quit")
             println()
             println("-----------------------------")
@@ -383,7 +383,7 @@ class NimInteraction {
                 }
             }
             if(n.isGameOver())
-                println(if(n.isWinPlayer1()) "p1 won the game" else "p2 won the game")
+                tailMessage = if(n.isWinPlayer1()) "p1 won the game" else "p2 won the game"
 
             println("\n".repeat(15))
         }
@@ -397,7 +397,7 @@ class NimInteraction {
                     "test mode\n" +
                             "\n" +
                             "[ENTER]  nim vs nimPerfect: play 40 game simulations\n" +
-                            "  [b]    back to main menu\n" +
+                            "  [b]    back to previous menu\n" +
                             " [q/e]   quit"
             )
             println()
@@ -409,6 +409,8 @@ class NimInteraction {
             val input = readLine()?:"".toLowerCase()
             if(input.startsWith("q") || input.startsWith("e"))
                 onExit = true
+            else if(input.startsWith("b"))
+                break
             else if(input.isEmpty()) {
 
 
