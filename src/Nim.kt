@@ -59,15 +59,15 @@ class Nim(
 
     private fun minimax(): Int {
         if(results[this] != null)
-            return results[this]!!
+            return results[this]!! * -turn
 
         if(isGameOver()) {
-            results[this] = result()
+            results[this] = result() * -turn
             return result()
         }
 
         val bestScore = if(nextMoves().firstOrNull { it.minimax() == turn } != null) turn else -turn
-        results[this] = bestScore
+        results[this] = bestScore * -turn
         return bestScore
     }
 
@@ -79,9 +79,5 @@ class Nim(
         return other.hashCode() == this.hashCode()
     }
 
-    override fun hashCode(): Int {
-        if(isGameOver())
-            return turn * Int.MAX_VALUE
-        return turn * fields.sorted().fold(0) {acc, i -> (acc shl maxShift) + i }
-    }
+    override fun hashCode(): Int = fields.sorted().fold(0) {acc, i -> (acc shl maxShift) + i }
 }

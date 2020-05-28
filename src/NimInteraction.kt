@@ -125,17 +125,13 @@ class NimInteraction {
         println("\n".repeat(5)) //setup console display
 
         while(!onExit) {
+
             println(
-                    if(n.isGameOver())
-                        if(n.isPlayer1Turn())
-                            "p2 won the game"
-                        else
-                            "p1 won the game"
-                    else
-                        if(n.isPlayer1Turn())
-                            "p1 turn"
-                        else
-                            "p2 turn"
+                    if(n.isGameOver()) {
+                        (if(n.isWinPlayer1()) "p1" else "p2") + " won the game"
+                    } else {
+                        (if(n.isPlayer1Turn()) "p1" else "p2") + " turn"
+                    }
             )
             println(n)
             println()
@@ -143,7 +139,7 @@ class NimInteraction {
                     " [row.number]  make your own move\n" +
                     "     [u]       undo move\t" +
                     "             [r]       reset game\n" +
-                    "     [b]       back to main menu\t" +
+                    "     [b]       back to previous menu\t" +
                     "    [q/e]      quit")
             println()
             println("-----------------------------")
@@ -194,7 +190,7 @@ class NimInteraction {
                 "test mode\n" +
                 "\n" +
                 "[ENTER]  nim vs nimPerfect: play 40 game simulations\n" +
-                "  [b]    back to main menu\n" +
+                "  [b]    back to previous menu\n" +
                 " [q/e]   quit"
             )
             println()
@@ -206,6 +202,8 @@ class NimInteraction {
             val input = readLine()?:"".toLowerCase()
             if(input.startsWith("q") || input.startsWith("e"))
                 onExit = true
+            else if(input.startsWith("b"))
+                break
             else if(input.isEmpty()) {
 
 
