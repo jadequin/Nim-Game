@@ -44,7 +44,13 @@ interface NimGame {
 
 
 
+
+
+
 data class NimMove(val row: Int, val number: Int)
+
+
+
 
 
 
@@ -99,10 +105,6 @@ class NimPerfect(private val fields: List<Int>, private val turn: Int = +1, priv
 
     override fun toString() = fields.joinToString(separator = "\n", transform = {("I ".repeat(it)).trimEnd()})
 }
-
-
-
-
 
 
 
@@ -173,15 +175,15 @@ class Nim(
 
     private fun minimax(): Int {
         if(results[this] != null)
-            return results[this]!!
+            return results[this]!! * -turn
 
         if(isGameOver()) {
-            results[this] = result()
+            results[this] = result() * -turn
             return result()
         }
 
         val bestScore = if(nextMoves().firstOrNull { it.minimax() == turn } != null) turn else -turn
-        results[this] = bestScore
+        results[this] = bestScore * -turn
         return bestScore
     }
 
@@ -193,15 +195,8 @@ class Nim(
         return other.hashCode() == this.hashCode()
     }
 
-    override fun hashCode(): Int {
-        if(isGameOver())
-            return turn * Int.MAX_VALUE
-        return turn * fields.sorted().fold(0) {acc, i -> (acc shl maxShift) + i }
-    }
+    override fun hashCode(): Int = fields.sorted().fold(0) {acc, i -> (acc shl maxShift) + i }
 }
-
-
-
 
 
 
@@ -283,7 +278,7 @@ class NimInteraction {
                             "       [ENTER]          Start a predefined game with the initial state 3-4-5\n" +
                             "[number-number-number]  Start a game with your own settings\n" +
                             "         [r]            Start a random game with 2-5 rows and 1-7 sticks per row\n" +
-                            "         [b]            back to previous menu\n" +
+                            "         [b]            back to main menu\n" +
                             "        [q/e]           quit"
             )
             println()
@@ -337,9 +332,14 @@ class NimInteraction {
         println("\n".repeat(5)) //setup console display
 
         while(!onExit) {
-            if(!n.isGameOver())
-                println((if (n.isPlayer1Turn()) "p1" else "p2") + " turn")
 
+            println(
+                    if(n.isGameOver()) {
+                        (if(n.isWinPlayer1()) "p1" else "p2") + " won the game"
+                    } else {
+                        (if(n.isPlayer1Turn()) "p1" else "p2") + " turn"
+                    }
+            )
             println(n)
             println()
             println("   [ENTER]     ai makes a best move\t" +
@@ -383,7 +383,7 @@ class NimInteraction {
                 }
             }
             if(n.isGameOver())
-                tailMessage = if(n.isWinPlayer1()) "p1 won the game" else "p2 won the game"
+                println(if(n.isWinPlayer1()) "p1 won the game" else "p2 won the game")
 
             println("\n".repeat(15))
         }
@@ -481,6 +481,20 @@ class NimInteraction {
     }
 }
 
+fun main() {
+    NimInteraction()
+}
 
 
-NimInteraction()
+
+
+
+
+
+
+
+
+
+
+
+main()
